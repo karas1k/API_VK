@@ -13,18 +13,22 @@ array_id = []
 
 
 """Reading file id.txt"""
-f = open('id.txt', encoding='UTF-8')
-"""Add id users in array_id"""
-for line in f.readlines():
-    array_id.append(line)
-f.close()
-
-"""Split elements in array_id for \n"""
-array_id = [line.rstrip() for line in array_id]
+with open('id.txt', encoding='UTF-8') as f: # Так удобнее и по всем инструкциям, что я видел лучше, так как файл закрывается сам как только заканчивается работа с ним
+    """Add id users in array_id"""
+    for line in f.readlines():
+        array_id.append(line.rstrip()) # у тебя была отдельная операция, добавил сюда для удобства
 
 def add_dir_for_photos():
+    try:
+        os.mkdir(f'out') # Добавил общую папку, чтобы не засорять основную папку
+    except OSError as identifier:
+        print("папка out уже существует, пропускаю создание")
     for i in array_id:
-        os.mkdir(f'id{i}')
+        try:
+            os.mkdir(f'out/id{i}')
+        except OSError as identifier:
+            print(f'папка id{i} уже существует, пропускаю создание')
+    
 
 def get_owner_id():
     for owner_id in array_id:
@@ -32,7 +36,7 @@ def get_owner_id():
 
 def write_json(data):
     # with open('photos.json', 'w') as file:
-    with open(f'id{get_owner_id()}/' + 'photos.json', 'w') as file:
+    with open(f'out/id{get_owner_id()}/' + 'photos.json', 'w') as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
 
 def get_largest(size_dict):
@@ -45,7 +49,7 @@ def download_photo(url):
     for owner_id in array_id:
         r = requests.get(url, stream = True)
         filename = url.split('/')[-1]
-        with open(f'id{get_owner_id()}/' + filename, 'wb') as file:
+        with open(f'out/id{get_owner_id()}/' + filename, 'wb') as file:
             for chunk in r.iter_content(4096):
                 file.write(chunk)
 
@@ -61,7 +65,7 @@ def main():
                                                       'photo_sizes': photo_sizes})
         write_json(r.json())
 
-        photos = json.load(open(f'id{get_owner_id()}/' + 'photos.json'))['response']['items']
+        photos = json.load(open(f'out/id{get_owner_id()}/' + 'photos.json'))['response']['items']
 
         for photo in photos:
             sizes = photo['sizes']
